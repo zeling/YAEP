@@ -3,6 +3,8 @@ package me.zeling.parser.earley;
 import me.zeling.parser.grammar.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Created by zeling on 16/5/2.
@@ -11,6 +13,7 @@ import java.util.ArrayList;
  */
 public class Earley<Token extends Terminal> {
     ArrayList<ParseState> states;
+    HashSet<NonTerminal> nullables;
     Grammar g;
     int currState;
 
@@ -23,6 +26,21 @@ public class Earley<Token extends Terminal> {
             initial.add(new EarleyEntry(g.getStart(), new DottedProduction(p), 0));
         }
         states.add(initial);
+        nullables = new HashSet<>();
+        int size;
+        do {
+
+            size = nullables.size();
+            for (Map.Entry<NonTerminal, HashSet<Production>> e : g.getGrammarMap().entrySet()) {
+                for (Production p : e.getValue()) {
+                    if (p.nullable() ||
+                            (p.size() == 1 && p.get(0) instanceof NonTerminal && nullables.contains(p.get(0)))) {
+                        nullables.add(e.getKey());
+                    }
+                }
+            }
+
+        } while (size != nullables.size());
     }
 
     private ParseState getNextState() {
@@ -51,7 +69,8 @@ public class Earley<Token extends Terminal> {
                 if (p.isCompleted()) {
                     /* completed */
                     ParseState parent = states.get(entry.start);
-                    for (EarleyEntry pentry : parent) {
+                    for (int j = 0; j < parent.size(); j++) {
+                        EarleyEntry pentry = parent.get(j);
                         if (!pentry.production.isCompleted()
                                 && pentry.production.peekTermAfterDot().equals(entry.head)) {
                             st.add(new EarleyEntry(pentry.head, pentry.production.advanceDot(), pentry.start));
@@ -62,6 +81,9 @@ public class Earley<Token extends Terminal> {
                     NonTerminal nonTerminal = (NonTerminal) p.peekTermAfterDot();
                     for (Production production : g.getGrammarMap().get(nonTerminal)) {
                         st.add(new EarleyEntry(nonTerminal, production, currState));
+                    }
+                    if (nullables.contains(nonTerminal)) {
+                        st.add(new EarleyEntry(nonTerminal, p.advanceDot(), entry.start));
                     }
                 } else if (token.equals(p.peekTermAfterDot())) {
                     /* scan */

@@ -36,4 +36,17 @@ public class Production {
     public int hashCode() {
         return terms.hashCode();
     }
+
+    public boolean nullable() {
+        return terms.size() == 0;
+    }
+
+    public Term get(int i) {
+        return terms.get(i);
+    }
+
+    public int size() {
+        return terms.size();
+    }
+
 }

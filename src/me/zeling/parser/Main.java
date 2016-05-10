@@ -18,11 +18,12 @@ import static me.zeling.parser.grammar.NonTerminal.nonTerminal;
 public class Main {
     public static void main(String[] args) {
         Grammar g = new Grammar(nonTerminal("S"),
-                new ProductionRule("S", new Terminal("("), nonTerminal("S"), new Terminal("\\and"), nonTerminal("S"), new Terminal(")")),
+                new ProductionRule("S", nonTerminal("N"), new Terminal("("), nonTerminal("S"), new Terminal("\\and"), nonTerminal("S"), new Terminal(")")),
                 new ProductionRule("S", new Terminal("("), nonTerminal("S"), new Terminal("\\or"), nonTerminal("S"), new Terminal(")")),
                 new ProductionRule("S", new Terminal("("), nonTerminal("S"), new Terminal("\\impl"), nonTerminal("S"), new Terminal(")")),
                 new ProductionRule("S", new Terminal("("), new Terminal("\\not"), nonTerminal("S"), new Terminal(")")),
-                new ProductionRule("S", new Terminal("p"))
+                new ProductionRule("S", new Terminal("p")),
+                new ProductionRule("N")
         );
         Earley<Terminal> parser = new Earley<>(g);
         System.out.println(parser.parse(new StringTokenizer("( p \\and ( \\not p ) )")));
